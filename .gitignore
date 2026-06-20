@@ -24,12 +24,7 @@ Thumbs.db
 devel/
 .devel/
 
-# Specific files you might want to ignore
-src/CMakeLists.txt
-src/*/build/
-src/*/install/
-
-# Ignore ONLY temporary SDF files in /tmp
+# temporary SDF files in /tmp
 /tmp/*.sdf
 /tmp/*.urdf
 *.gazebo
