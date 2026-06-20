@@ -1,0 +1,48 @@
+# Build and install directories
+build/
+install/
+log/
+*.pyc
+__pycache__/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Devel directories
+devel/
+.devel/
+
+# Specific files you might want to ignore
+src/CMakeLists.txt
+src/*/build/
+src/*/install/
+
+# Ignore ONLY temporary SDF files in /tmp
+/tmp/*.sdf
+/tmp/*.urdf
+*.gazebo
+
+# ROS files
+*.bag
+*.db
+*.log
+
+# TF frame files
+frames_*.gv
+frames_*.pdf
+
+# Temporary files
+*.gv
+*.pdf

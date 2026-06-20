@@ -1,0 +1,406 @@
+<?xml version="1.0" ?>
+<robot name="robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- ==================== GEOMETRY AND CONSTANTS ==================== -->
+<xacro:property name="pi_const" value="3.14159265"/>
+
+<!-- Body Dimensions -->
+<xacro:property name="a" value="0.55663" />   <!-- length (x) -->
+<xacro:property name="b" value="0.14044" />   <!-- height (z) -->
+<xacro:property name="c" value="0.388"   />   <!-- width  (y) -->
+
+<!-- Wheel Dimensions -->
+<xacro:property name="r" value="0.035" />     <!-- wheel radius -->
+<xacro:property name="d" value="0.04"  />     <!-- wheel thickness -->
+
+<!-- Offsets -->
+<xacro:property name="s1" value="${b/2+r}"/>         <!-- body center z above ground -->
+<xacro:property name="s2" value="${a/2-r}"/>         <!-- wheel x offset from body center -->
+<xacro:property name="s4" value="${c/2+d/2}"/>       <!-- wheel y offset (left/right) -->
+
+<!-- Camera offsets - Mounted on front face -->
+<xacro:property name="camera_x" value="${a/2}"/>           <!-- Front face of rover -->
+<xacro:property name="camera_y" value="0"/>                <!-- Centered -->
+<xacro:property name="camera_z" value="${b/4}"/>           <!-- Half height of rover -->
+
+<!-- Material Density -->
+<xacro:property name="d1" value="2710.0"/>   <!-- body (aluminium) -->
+<xacro:property name="d2" value="2710.0"/>   <!-- wheel -->
+
+<!-- Mass -->
+<xacro:property name="m1" value="${d1*a*b*c}"/>
+<xacro:property name="m2" value="${d2*pi_const*r*r*d}"/>
+
+<!-- Body Inertia -->
+<xacro:property name="Ix_body" value="${(1/12)*m1*(b*b+c*c)}"/>
+<xacro:property name="Iy_body" value="${(1/12)*m1*(a*a+b*b)}"/>
+<xacro:property name="Iz_body" value="${(1/12)*m1*(a*a+c*c)}"/>
+
+<!-- Wheel Inertia -->
+<xacro:property name="Iz_wheel" value="${0.5*m2*r*r}"/>
+<xacro:property name="I_wheel"  value="${(1.0/12.0)*m2*(3.0*r*r+d*d)}"/>
+
+<!-- Materials for visualization -->
+<xacro:property name="body_color" value="0.8 0.2 0.2 1.0"/>   <!-- Red -->
+<xacro:property name="wheel_color" value="0.2 0.2 0.2 1.0"/>  <!-- Dark grey -->
+<xacro:property name="camera_color" value="0.1 0.1 0.3 1.0"/> <!-- Dark blue -->
+
+<!-- Inertia macro: body -->
+<xacro:macro name="inertia_body">
+    <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="${m1}"/>
+        <inertia ixx="${Ix_body}" ixy="0.0" ixz="0.0"
+                 iyy="${Iy_body}" iyz="0.0"
+                 izz="${Iz_body}"/>
+    </inertial>
+</xacro:macro>
+
+<!-- Inertia macro: wheel -->
+<!-- rpy="1.5708 0 0" rotates the inertia tensor to match cylinder lying on its side -->
+<xacro:macro name="inertia_wheel">
+    <inertial>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <mass value="${m2}"/>
+        <inertia ixx="${Iz_wheel}" ixy="0.0" ixz="0.0"
+                 iyy="${I_wheel}"  iyz="0.0"
+                 izz="${I_wheel}"/>
+    </inertial>
+</xacro:macro>
+
+<!-- ========== BASE FOOTPRINT ========== -->
+<link name="base_footprint"/>
+
+<!-- ========== BASE TO FOOTPRINT JOINT ========== -->
+<joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <origin xyz="0 0 ${s1}" rpy="0 0 0"/>
+</joint>
+
+<!-- ========== BASE LINK ========== -->
+<link name="base_link">
+    <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="${a} ${c} ${b}"/>
+        </geometry>
+        <material name="body_material">
+            <color rgba="${body_color}"/>
+        </material>
+    </visual>
+    <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="${a} ${c} ${b}"/>
+        </geometry>
+    </collision>
+    <xacro:inertia_body/>
+</link>
+
+<!-- ============================================================== -->
+<!-- WHEELS (Using ROS Convention: +X=Front, +Y=Left, +Z=Up)        -->
+<!-- ============================================================== -->
+
+<!-- ========== FRONT LEFT WHEEL ========== -->
+<joint name="front_left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="front_left_wheel"/>
+    <origin xyz="${s2} ${s4} ${-b/2}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="50.0" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
+</joint>
+
+<link name="front_left_wheel">
+    <visual>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+        <material name="wheel_material">
+            <color rgba="${wheel_color}"/>
+        </material>
+    </visual>
+    <collision>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+    </collision>
+    <xacro:inertia_wheel/>
+</link>
+
+<!-- ========== FRONT RIGHT WHEEL ========== -->
+<joint name="front_right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="front_right_wheel"/>
+    <origin xyz="${s2} ${-s4} ${-b/2}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="50.0" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
+</joint>
+
+<link name="front_right_wheel">
+    <visual>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+        <material name="wheel_material">
+            <color rgba="${wheel_color}"/>
+        </material>
+    </visual>
+    <collision>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+    </collision>
+    <xacro:inertia_wheel/>
+</link>
+
+<!-- ========== REAR LEFT WHEEL ========== -->
+<joint name="rear_left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="rear_left_wheel"/>
+    <origin xyz="${-s2} ${s4} ${-b/2}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="50.0" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
+</joint>
+
+<link name="rear_left_wheel">
+    <visual>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+        <material name="wheel_material">
+            <color rgba="${wheel_color}"/>
+        </material>
+    </visual>
+    <collision>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+    </collision>
+    <xacro:inertia_wheel/>
+</link>
+
+<!-- ========== REAR RIGHT WHEEL ========== -->
+<joint name="rear_right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="rear_right_wheel"/>
+    <origin xyz="${-s2} ${-s4} ${-b/2}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="50.0" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
+</joint>
+
+<link name="rear_right_wheel">
+    <visual>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+        <material name="wheel_material">
+            <color rgba="${wheel_color}"/>
+        </material>
+    </visual>
+    <collision>
+        <origin rpy="1.5708 0 0" xyz="0 0 0"/>
+        <geometry>
+            <cylinder length="${d}" radius="${r}"/>
+        </geometry>
+    </collision>
+    <xacro:inertia_wheel/>
+</link>
+
+<!-- ============================================================== -->
+<!-- RPI CAMERA - MOUNTED ON FRONT FACE LOOKING FORWARD            -->
+<!-- ============================================================== -->
+
+<!-- Camera mount joint (physical camera on front face) -->
+<joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="camera_link"/>
+    <origin xyz="${camera_x} ${camera_y} ${camera_z}" rpy="0 1.5708 0"/>
+</joint>
+
+<!-- Camera physical link -->
+<link name="camera_link">
+    <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="0.025 0.025 0.009"/>
+        </geometry>
+        <material name="camera_material">
+            <color rgba="${camera_color}"/>
+        </material>
+    </visual>
+    <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+            <box size="0.025 0.025 0.009"/>
+        </geometry>
+    </collision>
+    <inertial>
+        <mass value="0.003"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.000001" ixy="0" ixz="0"
+                 iyy="0.000001" iyz="0"
+                 izz="0.000001"/>
+    </inertial>
+</link>
+
+<!-- Optical frame joint (for camera sensor) -->
+<!-- This represents the actual camera sensor frame looking forward -->
+<!-- rpy="0 -1.5708 0" rotates camera to look forward (+X direction) -->
+<!-- Then rpy="-1.5708 0 -1.5708" aligns Z forward for optical convention -->
+<joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child  link="camera_optical_frame"/>
+    <origin xyz="0 0 0.0045" rpy="-1.5708 0 -1.5708"/>
+</joint>
+
+<!-- Optical frame link -->
+<!-- This follows REP-103/REP-104 standard for camera frames -->
+<!-- Z is forward (optical axis), X is right, Y is down -->
+<link name="camera_optical_frame"/>
+
+<!--LIDAR-->
+
+
+<!-- ============================================================== -->
+<!-- LIDAR WITH FULL GAZEBO CONFIGURATION                          -->
+<!-- ============================================================== -->
+
+<!-- Lidar mount joint -->
+<joint name="lidar_joint" type="fixed">
+    <origin xyz="0 0 ${b/2 + 0.01}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+</joint>
+
+<!-- Lidar base link -->
+<link name="lidar_link">
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <cylinder length="0.03" radius="0.055"/>
+        </geometry>
+        <material name="lidar_material">
+            <color rgba="0.1 0.8 0.1 1.0"/>
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <cylinder length="0.03" radius="0.055"/>
+        </geometry>
+    </collision>
+    <inertial>
+        <mass value="0.1"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0"
+                 iyy="0.0001" iyz="0"
+                 izz="0.0001"/>
+    </inertial>
+</link>
+
+<!-- Lidar spinner joint (continuous rotation) -->
+<joint name="lidar_spinner_joint" type="continuous">
+    <parent link="lidar_link"/>
+    <child link="lidar_spinner_link"/>
+    <origin xyz="0 0 0.015" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10.0" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
+</joint>
+
+<!-- Lidar spinner link -->
+<link name="lidar_spinner_link">
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <cylinder length="0.015" radius="0.04"/>
+        </geometry>
+        <material name="lidar_spinner_material">
+            <color rgba="0.1 0.5 0.1 1.0"/>
+        </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <cylinder length="0.015" radius="0.04"/>
+        </geometry>
+    </collision>
+    <inertial>
+        <mass value="0.05"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="0.00001" ixy="0" ixz="0"
+                 iyy="0.00001" iyz="0"
+                 izz="0.00001"/>
+    </inertial>
+</link>
+
+<!-- Lidar sensor frame -->
+<joint name="lidar_sensor_joint" type="fixed">
+    <parent link="lidar_spinner_link"/>
+    <child link="lidar_sensor_frame"/>
+    <origin xyz="0 0 0.01" rpy="0 0 0"/>
+</joint>
+
+<link name="lidar_sensor_frame"/>
+
+<!-- ============================================================== -->
+<!-- GAZEBO LIDAR PLUGIN CONFIGURATION                             -->
+<!-- ============================================================== -->
+
+<gazebo reference="lidar_sensor_frame">
+    <sensor type="ray" name="lidar_sensor">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>true</visualize>
+        <update_rate>10.0</update_rate>
+        
+        <ray>
+            <scan>
+                <horizontal>
+                    <samples>360</samples>
+                    <resolution>1.0</resolution>      <!-- 1 degree resolution -->
+                    <min_angle>-3.14159265</min_angle> <!-- -180 degrees -->
+                    <max_angle>3.14159265</max_angle>  <!-- +180 degrees -->
+                </horizontal>
+                <vertical>
+                    <samples>1</samples>
+                    <resolution>0.0</resolution>
+                    <min_angle>0.0</min_angle>
+                    <max_angle>0.0</max_angle>
+                </vertical>
+            </scan>
+            <range>
+                <min>0.1</min>
+                <max>12.0</max>
+                <resolution>0.01</resolution>
+            </range>
+            <noise>
+                <type>gaussian</type>
+                <mean>0.0</mean>
+                <stddev>0.01</stddev>
+            </noise>
+        </ray>
+        
+        <plugin name="lidar_controller" filename="libgazebo_ros_ray_sensor.so">
+            <ros>
+                <namespace>/</namespace>
+                <remapping>~/out:=/scan</remapping>
+            </ros>
+            <frame_name>lidar_sensor_frame</frame_name>
+            <topic_name>/scan</topic_name>
+        </plugin>
+    </sensor>
+</gazebo>
+
+</robot>
