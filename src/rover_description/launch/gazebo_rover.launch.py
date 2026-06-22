@@ -1,10 +1,10 @@
-import os
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, ExecuteProcess, LogInfo, RegisterEventHandler, TimerAction
+from launch_ros.actions import Node
+from launch.actions import IncludeLaunchDescription, ExecuteProcess, LogInfo, RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.event_handlers import OnProcessStart, OnProcessExit
-from launch_ros.actions import Node
+from ament_index_python.packages import get_package_share_directory
+import os
 import xacro
 import subprocess
 import tempfile
@@ -92,7 +92,7 @@ def generate_launch_description():
   </model>
 </sdf>''')
 
-    # Gazebo launch with empty.sdf (we'll spawn obstacles via commands)
+    # Gazebo launch with empty.sdf
     gazebo_rosPackageLaunch = PythonLaunchDescriptionSource(
         os.path.join(
             get_package_share_directory('ros_gz_sim'),
@@ -127,17 +127,20 @@ def generate_launch_description():
     spawnModelNodeGazebo = Node(
         package='ros_gz_sim',
         executable='create',
+        name='spawn_rover',  # UNIQUE NAME
         arguments=[
             '-name', 'rover',
             '-topic', 'robot_description'
         ],
         output='screen',
+        parameters=[{'use_sim_time': True}]
     )
 
     # Robot State Publisher
     nodeRobotStatePublisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
+        name='robot_state_publisher_rover',  # UNIQUE NAME
         output='screen',
         parameters=[{
             'robot_description': robotDescription,
@@ -149,38 +152,88 @@ def generate_launch_description():
     joint_state_publisher = Node(
         package='joint_state_publisher_gui',
         executable='joint_state_publisher_gui',
-        name='joint_state_publisher_gui',
-        output='screen'
+        name='joint_state_publisher_rover',  # UNIQUE NAME
+        output='screen',
+        parameters=[{'use_sim_time': True}]
     )
 
     # Static transform for odom to base_footprint
     odom_to_base_footprint = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='odom_to_base_footprint',
+        name='odom_to_base_footprint_rover',  # UNIQUE NAME
         output='screen',
-        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'base_footprint']
+        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'base_footprint'],
+        parameters=[{'use_sim_time': True}]
     )
 
-    # FIX: Bridge the lidar frame mismatch
+    # Bridge the lidar frame mismatch - UNIQUE NAME
     lidar_frame_bridge = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='lidar_frame_bridge',
+        name='lidar_frame_bridge_rover',  # UNIQUE NAME - FIXED!
         output='screen',
-        arguments=['0', '0', '0', '0', '0', '0', 'lidar_link', 'rover/base_footprint/gpu_lidar']
+        arguments=['0', '0', '0', '0', '0', '0', 'lidar_link', 'rover/base_footprint/gpu_lidar'],
+        parameters=[{'use_sim_time': True}]
     )
 
-    # Bridge for scan - FIXED to use correct topic
+    # Bridge for scan and cmd_vel
     scan_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        name='scan_bridge',
+        name='scan_bridge_rover',  # UNIQUE NAME
         output='screen',
         arguments=[
-            '/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan',
-            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist'
-        ]
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist'
+        ],
+        parameters=[{'use_sim_time': True}]
+    )
+
+    # Odometry bridge
+    odom_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='odom_bridge_rover',  # UNIQUE NAME
+        output='screen',
+        arguments=['/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry'],
+        parameters=[{'use_sim_time': True}]
+    )
+
+    # Clock bridge for sim time
+    clock_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='clock_bridge_rover',  # UNIQUE NAME
+        output='screen',
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        parameters=[{'use_sim_time': True}]
+    )
+
+    # EKF node for odometry
+    ekf_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node_rover',  # UNIQUE NAME
+        output='screen',
+        parameters=[{
+            'use_sim_time': True,
+            'odom_frame': 'odom',
+            'base_link_frame': 'base_footprint',
+            'world_frame': 'odom',
+            'frequency': 30.0,
+            'two_d_mode': True,
+            
+            'odom0': '/odom',
+            'odom0_config': [True, True, False,
+                            False, False, True,
+                            False, False, False,
+                            False, False, False],
+            'odom0_differential': False,
+            'odom0_relative': False,
+            'publish_tf': True,
+            'publish_acceleration': False,
+        }]
     )
 
     return LaunchDescription([
@@ -196,8 +249,7 @@ def generate_launch_description():
         joint_state_publisher,
 
         odom_to_base_footprint,
-
-        lidar_frame_bridge,
+        lidar_frame_bridge,  # Now has unique name
 
         spawnModelNodeGazebo,
         RegisterEventHandler(
@@ -220,6 +272,30 @@ def generate_launch_description():
             OnProcessStart(
                 target_action=scan_bridge,
                 on_start=[LogInfo(msg='[rover_description] /scan bridge started')]
+            )
+        ),
+
+        odom_bridge,
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=odom_bridge,
+                on_start=[LogInfo(msg='[rover_description] /odom bridge started')]
+            )
+        ),
+
+        clock_bridge,
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=clock_bridge,
+                on_start=[LogInfo(msg='[rover_description] /clock bridge started')]
+            )
+        ),
+        
+        ekf_node,
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=ekf_node,
+                on_start=[LogInfo(msg='[rover_description] EKF node started')]
             )
         ),
     ])
