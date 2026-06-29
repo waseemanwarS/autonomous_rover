@@ -2,12 +2,16 @@
 build/
 install/
 log/
-src/.vscode/
 
 # Map files
 *.pgm
 *.yaml
 odom:
+
+# VS Code
+.vscode/
+src/.vscode/
+*.code-workspace
 
 # Python cache
 __pycache__/
@@ -22,10 +26,9 @@ __pycache__/
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
 
 # Backup files
 *~
 *.swp
 *.swo
-.vscode/
-src/.vscode/
