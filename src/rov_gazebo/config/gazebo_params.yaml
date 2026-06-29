@@ -1,0 +1,19 @@
+# rov_gazebo/config/gazebo_params.yaml
+# Gazebo physics and rendering parameters
+
+gz_sim:
+  ros__parameters:
+    # Physics
+    physics_engine: "ode"
+    real_time_factor: 1.0
+    real_time_update_rate: 250.0
+    max_step_size: 0.004
+    iterations: 50
+    
+    # Rendering
+    render_engine: "ogre2"
+    enable_shadows: false
+    enable_scene: true
+    enable_sky: false
+    enable_fog: false
+    enable_contact: true
