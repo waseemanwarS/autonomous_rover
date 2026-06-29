@@ -1,0 +1,89 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <world name="simple_room">
+    <physics name="default" type="ode">
+      <gravity>0 0 -9.81</gravity>
+    </physics>
+    
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    
+    <!-- Walls -->
+    <model name="wall_front">
+      <static>true</static>
+      <pose>0 2 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box size="4.0 0.1 1.0"/>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+          </material>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box size="4.0 0.1 1.0"/>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    
+    <model name="wall_back">
+      <static>true</static>
+      <pose>0 -2 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box size="4.0 0.1 1.0"/>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box size="4.0 0.1 1.0"/>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    
+    <model name="wall_left">
+      <static>true</static>
+      <pose>-2 0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box size="0.1 4.0 1.0"/>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box size="0.1 4.0 1.0"/>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    
+    <model name="wall_right">
+      <static>true</static>
+      <pose>2 0 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box size="0.1 4.0 1.0"/>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <geometry>
+            <box size="0.1 4.0 1.0"/>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>

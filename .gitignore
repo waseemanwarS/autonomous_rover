@@ -1,0 +1,31 @@
+# Build directories
+build/
+install/
+log/
+src/.vscode/
+
+# Map files
+*.pgm
+*.yaml
+odom:
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# ROS logs
+*.log
+*.txt
+
+# Gazebo logs
+*.db
+*.db-shm
+*.db-wal
+
+# Backup files
+*~
+*.swp
+*.swo
+.vscode/
+src/.vscode/

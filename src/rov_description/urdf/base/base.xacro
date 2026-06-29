@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rov_description)/urdf/common/inertial_macros.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/common/materials.xacro"/>
+
+  <!-- ==================== OFFSETS ==================== -->
+  <xacro:property name="s1" value="${b/2+r}"/>
+  <!-- ==================== BASE FOOTPRINT ==================== -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child  link="base_link"/>
+    <origin xyz="0 0 ${s1}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== BASE LINK ==================== -->
+  <link name="base_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="${a} ${c} ${b}"/>
+      </geometry>
+      <material name="body_material">
+        <color rgba="${body_color}"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="${a} ${c} ${b}"/>
+      </geometry>
+    </collision>
+    <xacro:inertia_body/>
+  </link>
+
+</robot>

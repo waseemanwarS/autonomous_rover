@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<robot name="rover" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rov_description)/urdf/common/materials.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/common/inertial_macros.xacro"/>
+  
+  <xacro:include filename="$(find rov_description)/urdf/base/base.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/wheels/wheel.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/sensors/camera.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/sensors/lidar.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/sensors/imu.xacro"/>
+
+  <xacro:property name="s2" value="${a/2-r}"/>         <xacro:property name="s4" value="${c/2+d/2}"/>       <xacro:wheel prefix="front_left"  x_pos="${s2}"  y_pos="${s4}"   z_pos="${-b/2}"/>
+  <xacro:wheel prefix="front_right" x_pos="${s2}"  y_pos="${-s4}"  z_pos="${-b/2}"/>
+  <xacro:wheel prefix="rear_left"   x_pos="${-s2}" y_pos="${s4}"   z_pos="${-b/2}"/>
+  <xacro:wheel prefix="rear_right"  x_pos="${-s2}" y_pos="${-s4}"  z_pos="${-b/2}"/>
+
+  <xacro:camera parent_link="base_link" prefix="front"/>
+  <xacro:lidar parent_link="base_link" prefix="top"/>
+  <xacro:imu parent_link="base_link" prefix="base"/>
+
+  <xacro:if value="$(arg gazebo)">
+    <xacro:include filename="$(find rov_description)/urdf/gazebo/gazebo_plugins.xacro"/>
+    <xacro:lidar_gazebo prefix="top"/>
+    <xacro:imu_gazebo prefix="base"/>
+  </xacro:if>
+
+</robot>

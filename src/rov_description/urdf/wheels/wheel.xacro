@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rov_description)/urdf/common/inertial_macros.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/common/materials.xacro"/>
+
+  <xacro:macro name="wheel" params="prefix x_pos y_pos z_pos">
+
+    <xacro:property name="side_multiplier" value="${((y_pos >= 0) * 2) - 1}"/>
+    <xacro:property name="clearance_y" value="${0.010 * side_multiplier}"/> <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child  link="${prefix}_wheel"/>
+      <origin xyz="${x_pos} ${y_pos + clearance_y} ${z_pos}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="400.0" velocity="10.0"/>
+      <dynamics damping="0.1" friction="0.05"/>
+    </joint>
+
+    <link name="${prefix}_wheel">
+      <visual name="tire">
+        <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+        <geometry>
+          <cylinder radius="${r}" length="${d}"/>
+        </geometry>
+        <material name="wheel_material">
+          <color rgba="${wheel_color}"/>
+        </material>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+        <geometry>
+          <cylinder radius="${r}" length="${d}"/>
+        </geometry>
+      </collision>
+
+      <xacro:inertia_wheel/>
+    </link>
+
+    <gazebo reference="${prefix}_wheel">
+      <mu1>0.45</mu1>
+      <mu2>0.45</mu2>
+      <kp>1000000.0</kp>
+      <kd>1.0</kd>
+      <minDepth>0.001</minDepth>
+      <material>Gazebo/DarkGrey</material>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

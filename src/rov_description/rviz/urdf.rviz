@@ -1,0 +1,46 @@
+# rov_description/rviz/urdf.rviz
+
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+
+Visualization Manager:
+  Displays:
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Robot Description: robot_description
+      Visual Enabled: true
+      Update Interval: 0
+      TF Prefix: ""
+      
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 1
+      
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Plane Cell Count: 20
+      Plane: XY
+      Normal Cell Count: 0
+      Offset: 0
+      Color: 160; 160; 164
+      
+  Global Options:
+    Fixed Frame: base_footprint
+    Frame Rate: 30
+    Background Color: 48; 48; 48
+    
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 2
+      Focal Point: [0, 0, 0]
+      Pitch: 0.5
+      Roll: 0
+      Yaw: 0.785

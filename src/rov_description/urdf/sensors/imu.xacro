@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rov_description)/urdf/common/materials.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/common/inertial_macros.xacro"/>
+
+  <!-- ==================== IMU (MPU6050) PARAMETERS ==================== -->
+  <xacro:property name="imu_size_x" value="0.015"/>   <!-- 15mm width -->
+  <xacro:property name="imu_size_y" value="0.015"/>   <!-- 15mm depth -->
+  <xacro:property name="imu_size_z" value="0.003"/>   <!-- 3mm height -->
+  <xacro:property name="imu_mass" value="0.005"/>     <!-- 5g -->
+  <xacro:property name="imu_mount_x" value="0.0"/>    <!-- Centered on rover -->
+  <xacro:property name="imu_mount_y" value="0.0"/>    <!-- Centered on rover -->
+  <xacro:property name="imu_mount_z" value="${b/2}"/> <!-- Top of rover body -->
+
+  <xacro:macro name="imu" params="parent_link prefix">
+    
+    <!-- IMU joint -->
+    <joint name="${prefix}_imu_joint" type="fixed">
+      <parent link="${parent_link}"/>
+      <child  link="${prefix}_imu_link"/>
+      <origin xyz="${imu_mount_x} ${imu_mount_y} ${imu_mount_z}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- IMU link -->
+    <link name="${prefix}_imu_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${imu_size_x} ${imu_size_y} ${imu_size_z}"/>
+        </geometry>
+        <material name="imu_material">
+          <color rgba="${imu_color}"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${imu_size_x} ${imu_size_y} ${imu_size_z}"/>
+        </geometry>
+      </collision>
+      <xacro:inertia_box 
+        mass="${imu_mass}" 
+        size_x="${imu_size_x}" 
+        size_y="${imu_size_y}" 
+        size_z="${imu_size_z}"/>
+    </link>
+
+  </xacro:macro>
+
+</robot>

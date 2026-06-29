@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rov_description)/urdf/common/materials.xacro"/>
+  <xacro:include filename="$(find rov_description)/urdf/common/inertial_macros.xacro"/>
+
+  <!-- ==================== CAMERA PARAMETERS ==================== -->
+  <xacro:property name="camera_x" value="${a/2}"/>           <!-- Front face of rover -->
+  <xacro:property name="camera_y" value="0"/>                <!-- Centered -->
+  <xacro:property name="camera_z" value="${b/4}"/>           <!-- Half height of rover -->
+
+  <xacro:macro name="camera" params="parent_link prefix">
+    
+    <!-- Camera joint -->
+    <joint name="${prefix}_camera_joint" type="fixed">
+      <parent link="${parent_link}"/>
+      <child  link="${prefix}_camera_link"/>
+      <origin xyz="${camera_x} ${camera_y} ${camera_z}" rpy="0 1.5708 0"/>
+    </joint>
+
+    <!-- Camera link -->
+    <link name="${prefix}_camera_link">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.025 0.025 0.009"/>
+        </geometry>
+        <material name="camera_material">
+          <color rgba="${camera_color}"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="0.025 0.025 0.009"/>
+        </geometry>
+      </collision>
+      <xacro:inertia_box mass="0.003" size_x="0.025" size_y="0.025" size_z="0.009"/>
+    </link>
+
+    <!-- Optical frame -->
+    <joint name="${prefix}_camera_optical_joint" type="fixed">
+      <parent link="${prefix}_camera_link"/>
+      <child  link="${prefix}_camera_optical_frame"/>
+      <origin xyz="0 0 0.0045" rpy="-1.5708 0 -1.5708"/>
+    </joint>
+
+    <link name="${prefix}_camera_optical_frame"/>
+
+  </xacro:macro>
+
+</robot>
